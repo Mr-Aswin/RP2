@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "product_id": "SKU-001",
+    "product_name": "Coffee Beans",
+    "quantity": 10,
+    "revenue": 125.0,
+    "sale_date": "2026-07-24T21:12:51.171994"
+  },
+  {
+    "id": 2,
+    "product_id": "SKU-004",
+    "product_name": "bun",
+    "quantity": 18,
+    "revenue": 180.0,
+    "sale_date": "2026-07-24T21:15:14.243719"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "SKU-001",
+    "name": "Coffee Beans",
+    "category": "Groceries",
+    "price": 12.5,
+    "stock_quantity": 8,
+    "reorder_level": 10,
+    "supplier_contact": "supplier@coffeeco.com"
+  },
+  {
+    "id": "SKU-002",
+    "name": "Notebook",
+    "category": "Stationery",
+    "price": 4.0,
+    "stock_quantity": 6,
+    "reorder_level": 8,
+    "supplier_contact": "office@supplies.com"
+  },
+  {
+    "id": "SKU-003",
+    "name": "Portable Charger",
+    "category": "Electronics",
+    "price": 24.99,
+    "stock_quantity": 15,
+    "reorder_level": 12,
+    "supplier_contact": "gadgets@vendor.net"
+  },
+  {
+    "id": "SKU-004",
+    "name": "bun",
+    "category": "food",
+    "price": 10.0,
+    "stock_quantity": 2,
+    "reorder_level": 18.0,
+    "supplier_contact": "Not provided"
+  }
+]

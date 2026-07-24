@@ -1,0 +1,6 @@
+[
+  "tests/test_inventory.py::InventoryTests::test_calculate_revenue_uses_quantity_and_price",
+  "tests/test_inventory.py::InventoryTests::test_update_stock_on_sale_reduces_inventory",
+  "tests/test_inventory.py::InventoryTests::test_update_stock_on_sale_rejects_insufficient_stock",
+  "tests/test_inventory.py::InventoryTests::test_validate_product_data_rejects_invalid_values"
+]

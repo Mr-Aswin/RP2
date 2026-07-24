@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title }} - Inventory Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="brand">Inventory Manager</div>
+      <div class="nav-links">
+        <a href="{{ url_for('index') }}">Dashboard</a>
+        <a href="{{ url_for('products') }}">Inventory</a>
+        <a href="{{ url_for('sales') }}">Sales</a>
+        <a href="{{ url_for('reports') }}">Reports</a>
+      </div>
+    </nav>
+
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>

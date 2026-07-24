@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header">
+  <h1>Reports</h1>
+</div>
+
+<div class="grid-2">
+  <section class="panel">
+    <h2>Daily Revenue</h2>
+    <ul class="item-list">
+      {% for date, amount in daily_revenue.items() %}
+        <li><strong>{{ date }}</strong><span>${{ amount }}</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>Weekly Revenue</h2>
+    <ul class="item-list">
+      {% for week, amount in weekly_revenue.items() %}
+        <li><strong>{{ week }}</strong><span>${{ amount }}</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<section class="panel">
+  <h2>Sales History Details</h2>
+  {% if sales %}
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Product</th><th>Quantity</th><th>Revenue</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        {% for sale in sales %}
+          <tr>
+            <td>{{ sale.id }}</td>
+            <td>{{ sale.product_name }}</td>
+            <td>{{ sale.quantity }}</td>
+            <td>${{ sale.revenue }}</td>
+            <td>{{ sale.sale_date }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No sales to display.</p>
+  {% endif %}
+</section>
+{% endblock %}

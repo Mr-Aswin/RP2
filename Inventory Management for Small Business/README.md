@@ -34,5 +34,9 @@ A Flask-based inventory and sales management dashboard for retail stores and sma
 
 ## Screenshots
 - Dashboard overview with summary cards and low-stock alerts
+![alt text](image.png)
 - Inventory management view with search and filters
+![alt text](image-1.png)
 - Sales recording and reports pages
+![alt text](image-2.png)
+![alt text](image-3.png)

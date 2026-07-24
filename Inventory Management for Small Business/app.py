@@ -233,7 +233,7 @@ def products():
     return render_template("products.html", products=filtered_products, page_title="Inventory")
 
 
-@app.route("/products/edit/<product_id>")
+@app.route("/products/edit/<product_id>", methods=["GET", "POST"])
 def edit_product(product_id):
     products_data = load_products()
     selected_product = None
@@ -244,6 +244,48 @@ def edit_product(product_id):
 
     if selected_product is None:
         flash("Product not found", "error")
+        return redirect(url_for("products"))
+
+    if request.method == "POST":
+        form_data = {
+            "name": request.form.get("name", ""),
+            "category": request.form.get("category", ""),
+            "price": request.form.get("price", ""),
+            "stock_quantity": request.form.get("stock_quantity", ""),
+            "reorder_level": request.form.get("reorder_level", ""),
+            "supplier_contact": request.form.get("supplier_contact", ""),
+        }
+
+        errors = validate_product_data(form_data)
+        if errors:
+            for error in errors:
+                flash(error, "error")
+            return render_template(
+                "products.html",
+                products=products_data,
+                selected_product=selected_product,
+                page_title="Edit Product",
+                errors=errors,
+            )
+
+        selected_product.update(
+            {
+                "name": form_data["name"].strip(),
+                "category": form_data["category"].strip(),
+                "price": float(form_data["price"]),
+                "stock_quantity": int(form_data["stock_quantity"]),
+                "reorder_level": float(form_data["reorder_level"]),
+                "supplier_contact": form_data["supplier_contact"].strip() or "Not provided",
+            }
+        )
+
+        try:
+            save_products(products_data)
+        except RuntimeError as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("products"))
+
+        flash("Product updated successfully", "success")
         return redirect(url_for("products"))
 
     return render_template("products.html", products=products_data, selected_product=selected_product, page_title="Edit Product")

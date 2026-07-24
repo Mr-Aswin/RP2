@@ -4,8 +4,8 @@
     "name": "Coffee Beans",
     "category": "Groceries",
     "price": 12.5,
-    "stock_quantity": 8,
-    "reorder_level": 10,
+    "stock_quantity": 11,
+    "reorder_level": 10.0,
     "supplier_contact": "supplier@coffeeco.com"
   },
   {
@@ -31,7 +31,7 @@
     "name": "bun",
     "category": "food",
     "price": 10.0,
-    "stock_quantity": 2,
+    "stock_quantity": 20,
     "reorder_level": 18.0,
     "supplier_contact": "Not provided"
   }

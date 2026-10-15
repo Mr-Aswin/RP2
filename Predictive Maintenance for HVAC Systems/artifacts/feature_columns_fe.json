@@ -1,0 +1,1 @@
+["ambient_temperature_c", "supply_air_temperature_c", "coolant_temperature_c", "humidity_pct", "vibration_mm_s", "pressure_bar", "airflow_m3_h", "energy_consumption_kwh", "runtime_hours", "load_pct", "temperature_difference_c", "energy_per_load", "coolant_ambient_difference_c"]

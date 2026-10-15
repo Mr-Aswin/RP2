@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HVAC Predictive Maintenance</title>
+  <style>
+    :root { font-family: Inter, system-ui, Arial, sans-serif; color: #172033; background: #f4f7fb; }
+    body { margin: 0; }
+    main { max-width: 1050px; margin: 32px auto; padding: 0 18px; }
+    .hero, .panel { background: white; border: 1px solid #e1e7ef; border-radius: 16px; padding: 24px; margin-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 3vw, 2.2rem); }
+    .muted { color: #5d6b82; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    label { display: block; font-size: .92rem; font-weight: 650; margin-bottom: 6px; }
+    input, select { width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 9px; padding: 11px; font: inherit; background: white; }
+    button { margin-top: 20px; border: 0; border-radius: 10px; padding: 13px 18px; background: #174ea6; color: white; font-weight: 700; cursor: pointer; }
+    .result { border-left: 5px solid #27834a; }
+    .result.failure { border-left-color: #c24135; }
+    .result h2 { margin-top: 0; }
+    .error { background: #fff1f0; border-color: #ffc9c4; color: #9f241a; }
+    .pill { display: inline-block; border-radius: 999px; padding: 5px 10px; background: #e8eef8; font-size: .85rem; }
+    @media (max-width: 650px) { .grid { grid-template-columns: 1fr; } main { margin-top: 16px; } }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>HVAC Predictive Maintenance</h1>
+    <p class="muted">Enter sensor readings and select a trained model to estimate the likelihood of a failure label.</p>
+    <span class="pill">Educational demo · Synthetic dataset</span>
+  </section>
+
+  {% if error %}
+  <section class="panel error"><strong>Input error:</strong> {{ error }}</section>
+  {% endif %}
+
+  {% if prediction %}
+  <section class="panel result {{ prediction.class }}">
+    <h2>Prediction: {{ prediction.label }}</h2>
+    <p>Model-estimated failure probability: <strong>{{ prediction.probability_pct }}%</strong></p>
+    <p class="muted">This is a model estimate, not a guarantee that equipment will or will not fail.</p>
+  </section>
+  {% endif %}
+
+  <form method="post">
+    <section class="panel">
+      <h2>Model selection</h2>
+      <label for="model">Choose model</label>
+      <select id="model" name="model">
+        {% for key, label in model_options.items() %}
+        <option value="{{ key }}" {% if selected_model == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <p class="muted">Logistic Regression uses its saved scaler. Random Forest uses unscaled features.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Sensor readings</h2>
+      <div class="grid">
+        {% for feature in raw_features %}
+        <div>
+          <label for="{{ feature }}">{{ feature.replace('_', ' ') }}</label>
+          <input id="{{ feature }}" name="{{ feature }}" type="number" step="any" required value="{{ defaults[feature] }}">
+        </div>
+        {% endfor %}
+      </div>
+      <button type="submit">Predict failure risk</button>
+    </section>
+  </form>
+
+  <p class="muted">Important: results depend on the training data and model. Validate with real equipment data before using this for maintenance decisions.</p>
+</main>
+</body>
+</html>

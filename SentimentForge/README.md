@@ -262,7 +262,8 @@ SentimentForge includes a Streamlit application connected to the fine-tuned Dist
 - Prediction confidence.
 - Positive probability.
 - Negative probability.
-- Visual probability comparison.
+- Side-by-side review input and sentiment results.
+- Confidence ring and positive/negative probability bars.
 - Model information.
 - Example reviews.
 - Input character and word counts.
@@ -276,7 +277,7 @@ The application provides a dark-themed interface designed to make sentiment pred
 ### Run the Application
 
 ```bash
-streamlit run app/app.py
+streamlit run app/streamlit_app.py
 ```
 
 The fine-tuned DistilBERT model must be available locally in:
@@ -296,6 +297,9 @@ SentimentForge/
 │   ├── components.py
 │   ├── model_loader.py
 │   ├── predictor.py
+│   ├── streamlit_app.py
+│   ├── templates/
+│   │   └── index.html
 │   └── styles.py
 │
 ├── data/
@@ -338,8 +342,11 @@ SentimentForge/
 │   └── roc_curve_comparison.png
 │
 ├── .gitignore
+├── .vercelignore
 ├── README.md
-└── requirements.txt
+├── requirements-model.txt
+├── requirements.txt
+└── vercel.json
 ```
 
 ## Installation and Setup
@@ -376,7 +383,7 @@ source venv/bin/activate
 ### 3. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-model.txt
 ```
 
 ### 4. Prepare the model
@@ -392,10 +399,74 @@ The directory contains the model weights, configuration, and tokenizer files. Th
 ### 5. Run SentimentForge
 
 ```bash
-streamlit run app/app.py
+streamlit run app/streamlit_app.py
 ```
 
 The application will open in your default browser.
+
+## Flask REST API
+
+The Flask API uses the same fine-tuned DistilBERT model loader and `predict_sentiment` function as the Streamlit app. It sends the raw review through the existing tokenizer (including its 512-token truncation and padding); no separate preprocessing pipeline or model is introduced.
+
+### Run the API locally
+
+Install both the API and model dependencies (see Installation and Setup), then start Flask from the project root:
+
+```bash
+python -m flask --app app.app run
+```
+
+Open `http://127.0.0.1:5000/` for the Flask review analyzer UI. The UI submits reviews to the same `/predict` endpoint exposed to API clients. The model is loaded once when the Flask module initializes. The local model must be present in `models/distilbert_finetuned/`.
+
+To run both interfaces locally at the same time, start Streamlit in a second terminal:
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+Use the Streamlit URL (usually `http://localhost:8501`) for the existing Streamlit app, and the Flask URL (`http://127.0.0.1:5000/`) for the Flask UI and API.
+
+### Endpoints
+
+- `GET /health` reports API and model-loading status.
+- `POST /predict` accepts a JSON object with a non-empty string `review`.
+
+Example request:
+
+```bash
+Invoke-RestMethod -Uri http://127.0.0.1:5000/predict `
+  -Method Post `
+  -ContentType 'application/json' `
+  -Body '{"review":"This movie was absolutely fantastic!"}'
+```
+
+Example response:
+
+```json
+{
+  "sentiment": "Positive",
+  "confidence": 0.96,
+  "positive_probability": 0.96,
+  "negative_probability": 0.04
+}
+```
+
+The numeric values above illustrate the response format; actual probabilities are produced by the model.
+
+### Vercel deployment and model hosting
+
+`vercel.json` configures the Flask function at `app/app.py`. The Vercel function uses a lightweight proxy mode when `SENTIMENTFORGE_REMOTE_API_URL` is set. Deploy the model-backed Flask API separately on a Python service that can host the model files and install both requirements files; its base URL (for example, `https://your-model-api.example.com`) becomes the Vercel project's `SENTIMENTFORGE_REMOTE_API_URL` environment variable. The hosted service should run `gunicorn --bind 0.0.0.0:$PORT app.app:app`. Do not set that variable on the model-backed service itself.
+
+The selected DistilBERT checkpoint is `models/distilbert_finetuned/model.safetensors` (267,832,560 bytes, about 256 MiB). Vercel currently documents a 500 MB uncompressed bundle limit for Python functions. The weights alone are below that limit, but leave only about 244 MiB for PyTorch, Transformers, Flask, and the rest of the function; bundling the full inference stack is not a reliable deployment. Vercel documents maximum function memory of 2 GB on Hobby and 4 GB on Pro/Enterprise; this Vercel function proxies requests and does not load the model into its own memory. This project therefore explicitly excludes `models/`, datasets, reports, notebooks, and model dependencies from the Vercel bundle via `.vercelignore` and `requirements.txt`. Keep the model on the separate inference service; do not remove or duplicate it to make a Vercel bundle appear to fit. See [Vercel Function limits](https://vercel.com/docs/functions/limitations) and the [Flask deployment guide](https://vercel.com/docs/frameworks/backend/flask).
+
+Deployment steps:
+
+1. Deploy the model-backed API to a Python web service with the project’s `models/distilbert_finetuned/` files available. Install `requirements.txt` and `requirements-model.txt`, and start it with `gunicorn --bind 0.0.0.0:$PORT app.app:app`.
+2. In Vercel, import the repository with the project root as the Root Directory and add `SENTIMENTFORGE_REMOTE_API_URL` set to the external API's base URL.
+3. Deploy with the Vercel dashboard or the Vercel CLI (`vercel`, then `vercel --prod`). The Vercel function forwards `/health` and `/predict` to the model-backed service.
+4. Verify `https://<your-vercel-deployment>/health` returns `{"status":"ok","model_loaded":true}` before sending predictions.
+
+Use the model host's access controls and rate limits for the public inference service. If the Vercel environment variable is missing, the Flask app attempts local model loading and reports a clear unhealthy status if the model/dependencies were excluded.
 
 ## Limitations
 

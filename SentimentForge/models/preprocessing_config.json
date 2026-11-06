@@ -1,0 +1,9 @@
+{
+    "max_words": 30000,
+    "max_length": 300,
+    "padding": "post",
+    "truncating": "post",
+    "oov_token": "<OOV>",
+    "negative_label": 0,
+    "positive_label": 1
+}

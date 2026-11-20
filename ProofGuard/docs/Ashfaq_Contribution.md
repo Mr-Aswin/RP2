@@ -245,12 +245,14 @@ print(product)
 
 - **Target Repository:** `https://github.com/Mr-Aswin/RP2`
 - **Feature Branch:** `feature/ashfaq-product-extraction`
+- **Commit ID:** `ff8223268537f1a090792c96118aa74f1669fa06`
 - **Files Staged & Committed:**
   - `ProofGuard/app/extraction/product_extractor.py`
   - `ProofGuard/app/extraction/__init__.py`
   - `ProofGuard/tests/test_extraction.py`
   - `ProofGuard/docs/Ashfaq_Contribution.md`
 - **Commit Message:** `"Add product information extraction module"`
+- **Push Status:** Committed locally on feature branch. Push initiated (`git-credential-manager` authentication prompt ready for user sign-in or manual `git push -u origin feature/ashfaq-product-extraction`).
 
 ---
 

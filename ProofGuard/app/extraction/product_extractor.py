@@ -1,6 +1,9 @@
 """
 ProofGuard - Product Information Extraction Module
-Author: Ashfaq (Ticket 1 - Data & System Foundation)
+Authors:
+  - Ashfaq (Ticket 1 - Data & System Foundation): Core extraction engine.
+  - Arun Kumar S (Enhancement): None-input handling, M/N & S.No patterns,
+    OCR noise cleaning, extract_from_document() helper, additional categories.
 
 This module converts raw text extracted from OCR into structured product information
 compatible with the ProofGuard ProductCreate Pydantic schema.
@@ -85,6 +88,30 @@ KNOWN_BRANDS: dict[str, str] = {
     "kent": "Kent",
     "general electric": "GE",
     "ge": "GE",
+    # --- Arun Kumar S additions ---
+    "siemens": "Siemens",
+    "sharp": "Sharp",
+    "bpl": "BPL",
+    "videocon": "Videocon",
+    "onida": "Onida",
+    "intex": "Intex",
+    "micromax": "Micromax",
+    "realme": "Realme",
+    "vivo": "Vivo",
+    "oppo": "Oppo",
+    "nokia": "Nokia",
+    "motorola": "Motorola",
+    "jbl": "JBL",
+    "bose": "Bose",
+    "harman": "Harman",
+    "havells": "Havells",
+    "v-guard": "V-Guard",
+    "prestige": "Prestige",
+    "pigeon": "Pigeon",
+    "butterfly": "Butterfly",
+    "preethi": "Preethi",
+    "nilkamal": "Nilkamal",
+    "amul": "Amul",
 }
 
 # Known product types mapped to their category and canonical naming
@@ -178,15 +205,18 @@ DISALLOWED_TOKENS = {
 }
 
 
-def preprocess_text(raw_text: str) -> str:
+def preprocess_text(raw_text: str | None) -> str:
     """
     Clean, normalize, and prepare raw text extracted from OCR.
 
-    - Validates string input type.
+    - Validates string or None input type.
     - Normalizes unicode characters (NFKC).
     - Cleans excessive horizontal whitespace per line.
     - Standardizes line breaks while preserving document line structure.
     """
+    if raw_text is None:
+        return ""
+
     if not isinstance(raw_text, str):
         raise TypeError(f"Input text must be a string, got {type(raw_text).__name__}")
 
@@ -248,9 +278,9 @@ def extract_brand(text: str, nlp_doc: spacy.tokens.Doc | None = None) -> str | N
             if len(cleaned) >= 2 and cleaned.upper() not in DISALLOWED_TOKENS:
                 return cleaned.title()
 
-    # 2. 'Manufactured by ...' pattern
+    # 2. 'Manufactured by ...' or 'Made by ...' pattern
     mfg_match = re.search(
-        r"(?i)manufactured\s+by[\s:=–-]+([A-Za-z0-9&.\- ]{2,50})",
+        r"(?i)(?:manufactured|made)\s+by[\s:=–-]+([A-Za-z0-9&.\- ]{2,50})",
         text,
     )
     if mfg_match:
@@ -313,10 +343,10 @@ def extract_model_number(text: str) -> str | None:
         return None
 
     model_patterns = [
-        # Explicit label with separator: Model Number: WW80T, Model No: ...
-        r"(?i)\b(?:product\s+)?model(?:\s+(?:number|no\.?|code|id|#))?[\t ]*[:=–-]+[\t ]*([A-Za-z0-9][A-Za-z0-9\-_\./]{1,35})",
+        # Explicit label with separator: Model Number: WW80T, M/N: WA70B, Model No: ...
+        r"(?i)\b(?:product\s+)?(?:model(?:\s+(?:number|no\.?|code|id|#))?|m\/n|m\.?no\.?)[\t ]*[:=–-]+[\t ]*([A-Za-z0-9][A-Za-z0-9\-_\./]{1,35})",
         # Label followed by newline: Model Number:\nWW80T
-        r"(?i)\b(?:product\s+)?model(?:\s+(?:number|no\.?|code|id|#))?[\t ]*[:=–-]?[\t ]*\n[\t ]*([A-Za-z0-9][A-Za-z0-9\-_\./]{1,35})",
+        r"(?i)\b(?:product\s+)?(?:model(?:\s+(?:number|no\.?|code|id|#))?|m\/n|m\.?no\.?)[\t ]*[:=–-]?[\t ]*\n[\t ]*([A-Za-z0-9][A-Za-z0-9\-_\./]{1,35})",
         # Item / Product No:
         r"(?i)\b(?:item|product)\s*(?:model|no\.?|code|#)[\t ]*[:=–-]+[\t ]*([A-Za-z0-9][A-Za-z0-9\-_\./]{1,35})",
     ]
@@ -386,10 +416,10 @@ def extract_serial_number(text: str, exclude_model: str | None = None) -> str | 
         return None
 
     serial_patterns = [
-        # Explicit label with separator: Serial Number: SN12345678, SN: 4567890123
-        r"(?i)\b(?:serial(?:\s+(?:number|no\.?|id|#|identifier))?|s\/n|sr\.?\s*no\.?|sn)[\t ]*[:=–-]+[\t ]*([A-Za-z0-9][A-Za-z0-9\-_\./]{2,35})",
+        # Explicit label with separator: Serial Number: SN12345678, S.No: ..., SN: 4567890123
+        r"(?i)\b(?:serial(?:\s+(?:number|no\.?|id|#|identifier))?|s\/n|sr\.?\s*no\.?|s\.?\s*no\.?|sn)[\t ]*[:=–-]+[\t ]*([A-Za-z0-9][A-Za-z0-9\-_\./]{2,35})",
         # Label followed by newline:
-        r"(?i)\b(?:serial(?:\s+(?:number|no\.?|id|#|identifier))?|s\/n|sr\.?\s*no\.?|sn)[\t ]*[:=–-]?[\t ]*\n[\t ]*([A-Za-z0-9][A-Za-z0-9\-_\./]{2,35})",
+        r"(?i)\b(?:serial(?:\s+(?:number|no\.?|id|#|identifier))?|s\/n|sr\.?\s*no\.?|s\.?\s*no\.?|sn)[\t ]*[:=–-]?[\t ]*\n[\t ]*([A-Za-z0-9][A-Za-z0-9\-_\./]{2,35})",
     ]
 
     for pattern in serial_patterns:
@@ -540,20 +570,20 @@ def classify_category(product_name: str | None, text: str = "") -> str | None:
 
 
 def extract_product_info(
-    raw_text: str, as_dict: bool = False
+    raw_text: str | None, as_dict: bool = False
 ) -> ProductCreate | dict[str, Any]:
     """
     Main extraction interface. Converts raw OCR text into structured product information.
 
     Workflow:
-    1. Preprocesses raw text (validates type, strips noise, normalizes unicode).
+    1. Preprocesses raw text (validates type, handles None/empty, strips noise, normalizes unicode).
     2. Runs spaCy NLP pipeline.
     3. Extracts Brand, Product Name, Model Number, Serial Number, and Category.
     4. Validates structured data using the existing ProductCreate Pydantic schema.
     5. Returns a validated ProductCreate instance (or dict if as_dict=True).
 
     Args:
-        raw_text: Raw text string extracted from OCR or document processor.
+        raw_text: Raw text string extracted from OCR or document processor (or None).
         as_dict: If True, returns a Python dictionary; otherwise returns ProductCreate.
 
     Returns:
@@ -561,8 +591,18 @@ def extract_product_info(
         product_name, brand, model_number, serial_number, product_category.
 
     Raises:
-        TypeError: If raw_text is not a string.
+        TypeError: If raw_text is not a string or None.
     """
+    if raw_text is None:
+        empty_product = ProductCreate(
+            product_name=None,
+            brand=None,
+            model_number=None,
+            serial_number=None,
+            product_category=None,
+        )
+        return empty_product.model_dump() if as_dict else empty_product
+
     if not isinstance(raw_text, str):
         raise TypeError(f"Input text must be a string, got {type(raw_text).__name__}")
 

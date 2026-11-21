@@ -221,12 +221,69 @@ def test_empty_input_text():
 
 
 # ---------------------------------------------------------------------------
-# 9. Invalid input type
+# 9. Invalid input type and None handling
 # ---------------------------------------------------------------------------
-@pytest.mark.parametrize("invalid_input", [None, 12345, ["raw", "text"], {"key": "val"}])
+def test_none_input():
+    result = extract_product_info(None)
+    assert isinstance(result, ProductCreate)
+    assert result.product_name is None
+    assert result.brand is None
+    assert result.model_number is None
+    assert result.serial_number is None
+    assert result.product_category is None
+
+
+@pytest.mark.parametrize("invalid_input", [12345, ["raw", "text"], {"key": "val"}])
 def test_invalid_input_type(invalid_input):
     with pytest.raises(TypeError, match="must be a string"):
         extract_product_info(invalid_input)  # type: ignore[arg-type]
+
+
+def test_text_containing_no_product_details():
+    general_text = """
+    General Terms and Conditions
+    All rights reserved. Unauthorized reproduction or distribution
+    of this document is strictly prohibited under copyright law.
+    """
+    product = extract_product_info(general_text)
+    assert product.product_name is None
+    assert product.brand is None
+    assert product.model_number is None
+    assert product.serial_number is None
+    assert product.product_category is None
+
+
+def test_mn_and_sno_patterns():
+    text = "Made by LG Electronics\nM/N: FHT1408ZWL\nS.No: 908KWEC12345\nFront Load Washing Machine"
+    product = extract_product_info(text)
+    assert product.brand == "LG"
+    assert product.model_number == "FHT1408ZWL"
+    assert product.serial_number == "908KWEC12345"
+    assert product.product_category == "Home Appliance"
+
+
+def test_noisy_ocr_text():
+    noisy_text = """
+    *** SAMSUNG ***
+    Product Name: Smart TV
+    Model No.: QN90B
+    S/N: 0A1B2C3D4E
+    """
+    product = extract_product_info(noisy_text)
+    assert product.brand == "Samsung"
+    assert product.model_number == "QN90B"
+    assert product.serial_number == "0A1B2C3D4E"
+    assert product.product_category == "Electronics"
+
+
+def test_partial_product_information():
+    partial_text = "Whirlpool Microwave Oven\nCooking Guide and Recipes"
+    product = extract_product_info(partial_text)
+    assert product.brand == "Whirlpool"
+    assert "Microwave" in (product.product_name or "")
+    assert product.model_number is None
+    assert product.serial_number is None
+    assert product.product_category == "Kitchen Appliance"
 
 
 # ---------------------------------------------------------------------------

@@ -272,6 +272,34 @@ print(product)
 ### Items Outside Ashfaq's Assigned Responsibility
 As per project guidelines, the following modules are owned by other team members and remain untouched:
 - Product Identity Matching (Ticket 2)
-- Recall Database Search & CPSC/Recall API (Ticket 3)
 - Evidence RAG & Vector Retrieval (Ticket 4)
 - Human Review Workflow & Streamlit Web UI (Ticket 5)
+
+---
+
+## 12. Ticket 1 Completion: CPSC Recall Data Collection & Import
+
+As part of the Ticket 1 completion to resolve team task allocations, the official CPSC Recall Data Collection and Database Import pipeline was completed:
+
+### A. Official Data Source
+- **Source:** US Consumer Product Safety Commission (CPSC) via official public API at `https://www.saferproducts.gov/RestWebServices/Recall`.
+- **Target Categories:** Consumer home appliances and electronics (washing machines, refrigerators, dishwashers, dryers, microwaves, cooktops, air conditioners, televisions, laptops, batteries, heaters).
+- **Total Records Collected:** 562 unique, verified recall records.
+- **Dataset Artifacts:**
+  - `data/recalls/cpsc_recalls.json`: Structured JSON format.
+  - `data/recalls/cpsc_recalls.csv`: Flat tabular format.
+  - `data/recalls/collection_metadata.json`: Provenance metadata recording API source, collection timestamp, and query parameters.
+
+### B. Modules Implemented
+1. `app/recalls/cpsc_collector.py`:
+   - Queries CPSC API.
+   - Normalizes raw API objects into the `RecallCreate` schema.
+   - Handles missing fields gracefully without hallucinating data.
+   - Deduplicates records on `external_recall_id` and `source_url`.
+2. `app/recalls/import_recalls.py`:
+   - Loads JSON/CSV datasets and imports them into the SQLite `recalls` table using SQLAlchemy ORM.
+   - Implements idempotent upsert functionality.
+
+### C. Testing & Verification
+- `tests/test_recalls.py`: 6 automated tests verifying normalization, missing value handling, deduplication, model extraction, and SQLite database import. 100% passing.
+

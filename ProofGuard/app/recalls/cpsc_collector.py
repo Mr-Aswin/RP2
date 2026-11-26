@@ -67,7 +67,14 @@ def extract_models_from_text(text: str) -> list[str]:
                     and not token_clean.lower().startswith("http")
                 ):
                     models.add(token_clean)
-
+        # Fallback: find model numbers anywhere in the text.
+        # Requires letters before digits to avoid extracting serial numbers.
+        fallback_models =  re.findall(
+            r"(?i)\b[A-Z]{1,5}\d[A-Z0-9]*(?:[-/][A-Z0-9]+)*\b",
+            text,
+        )
+        for model in fallback_models:
+            models.add(model.strip(".,;:"))
     return sorted(models)
 
 
